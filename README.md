@@ -2,6 +2,8 @@
 
 An interactive serverless dashboard that explores the fascinating correlation between GitHub repository activity and solar activity. This creative project mashes up two completely unrelated data sources to discover if cosmic events influence developer productivity!
 
+🌌 Try Demo(https://yengeshwaran.github.io/Cosmic-Code-Dashboard/)
+
 ## 🚀 Features
 
 - **Real-time Data Integration**: Fetches live data from GitHub API and NOAA Space Weather services

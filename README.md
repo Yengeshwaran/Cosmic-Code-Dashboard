@@ -116,3 +116,6 @@ MIT License - feel free to use this project for learning, experimentation, or bu
 ---
 
 *"In space, no one can hear you code... but they can see your commits!"* 🚀👨‍💻
+
+## 🌐 Live Demo
+Visit the live dashboard: [Cosmic Code Dashboard](https://yengeshwaran.github.io/Cosmic-Code-Dashboard/)

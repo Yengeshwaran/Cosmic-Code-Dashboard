@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Sun, Github, Activity, TrendingUp, Calendar, Zap, Star } from 'lucide-react';
+import { Sun, Github, Activity, TrendingUp, Calendar, Zap, Star, ArrowLeft } from 'lucide-react';
+import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
+import RealtimeDashboard from './components/RealtimeDashboard';
 import { MobileMenu, ScrollProgress, FloatingActionButton } from './components/MobileOptimizations';
 import { fetchGitHubData, fetchSolarData } from './services/dataService';
 
@@ -36,28 +38,55 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [currentView, setCurrentView] = useState('landing'); // 'landing', 'dashboard', 'realtime'
+  const [showNavigation, setShowNavigation] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
-      try {
-        setLoading(true);
-        const [github, solar] = await Promise.all([
-          fetchGitHubData(),
-          fetchSolarData()
-        ]);
-        setGithubData(github);
-        setSolarData(solar);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      if (currentView === 'dashboard') {
+        try {
+          setLoading(true);
+          const [github, solar] = await Promise.all([
+            fetchGitHubData(),
+            fetchSolarData()
+          ]);
+          setGithubData(github);
+          setSolarData(solar);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
       }
     };
 
     loadData();
-  }, []);
+  }, [currentView]);
 
-  if (loading) {
+  const handleEnterDashboard = () => {
+    setCurrentView('dashboard');
+    setShowNavigation(true);
+  };
+
+  const handleViewChange = (view) => {
+    setCurrentView(view);
+    setMobileMenuOpen(false);
+  };
+
+  const handleBackToLanding = () => {
+    setCurrentView('landing');
+    setShowNavigation(false);
+    setLoading(true);
+    setError(null);
+  };
+
+  // Show landing page
+  if (currentView === 'landing') {
+    return <LandingPage onEnterDashboard={handleEnterDashboard} />;
+  }
+
+  // Show loading for dashboard data
+  if (currentView === 'dashboard' && loading) {
     return (
       <div className="min-h-screen flex items-center justify-center relative">
         <StarField />
@@ -82,7 +111,8 @@ function App() {
     );
   }
 
-  if (error) {
+  // Show error for dashboard
+  if (currentView === 'dashboard' && error) {
     return (
       <div className="min-h-screen flex items-center justify-center relative">
         <StarField />
@@ -93,12 +123,20 @@ function App() {
           <h2 className="text-xl font-bold text-github-text mb-2">Connection Lost</h2>
           <p className="text-github-muted mb-4">Unable to reach the cosmic data sources</p>
           <p className="text-red-300 text-sm">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="mt-4 px-6 py-2 bg-github-accent hover:bg-blue-600 text-white rounded-lg transition-colors"
-          >
-            Retry Connection
-          </button>
+          <div className="flex gap-3 mt-6">
+            <button 
+              onClick={handleBackToLanding}
+              className="px-6 py-2 bg-github-surface hover:bg-github-border text-github-text rounded-lg transition-colors"
+            >
+              Back to Home
+            </button>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-2 bg-github-accent hover:bg-blue-600 text-white rounded-lg transition-colors"
+            >
+              Retry Connection
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -108,71 +146,94 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // Render main dashboard application
   return (
     <div className="min-h-screen relative">
       <StarField />
       <ScrollProgress />
-      <MobileMenu 
-        isOpen={mobileMenuOpen} 
-        onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
-      />
-      <FloatingActionButton onClick={scrollToTop} />
       
-      {/* Enhanced Header */}
-      <header className="relative z-10 text-center py-12 px-4" id="top">
-        <div className="max-w-4xl mx-auto">
-          {/* Logo Section */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="relative group">
-              <Github className="w-12 h-12 text-github-accent group-hover:text-blue-400 transition-colors animate-float" />
-              <div className="absolute -inset-2 bg-github-accent/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-            <div className="text-4xl font-bold text-github-muted">×</div>
-            <div className="relative group">
-              <Sun className="w-12 h-12 text-solar-corona group-hover:text-yellow-300 transition-colors animate-float" style={{ animationDelay: '1s' }} />
-              <div className="absolute -inset-2 bg-solar-corona/20 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
-          </div>
-
-          {/* Title */}
-          <h1 className="responsive-text-4xl text-5xl font-bold text-github-text mb-4 bg-gradient-to-r from-github-accent via-solar-corona to-cosmic-nebula bg-clip-text text-transparent">
-            Cosmic Code Dashboard
-          </h1>
+      {/* Navigation */}
+      {showNavigation && (
+        <>
+          <MobileMenu 
+            isOpen={mobileMenuOpen} 
+            onToggle={() => setMobileMenuOpen(!mobileMenuOpen)} 
+          />
+          <FloatingActionButton onClick={scrollToTop} />
           
-          {/* Subtitle */}
-          <p className="responsive-text-xl text-xl text-github-muted max-w-2xl mx-auto leading-relaxed">
-            Exploring the mysterious correlation between solar activity and GitHub contributions
-          </p>
-
-          {/* Feature badges */}
-          <div className="flex flex-wrap justify-center gap-3 mt-8">
-            <div className="glass-github px-4 py-2 rounded-full text-sm text-github-accent flex items-center gap-2">
-              <Github className="w-4 h-4" />
-              Live GitHub Data
+          {/* Top Navigation Bar */}
+          <nav className="relative z-20 glass-github border-b border-github-border/30">
+            <div className="max-w-7xl mx-auto px-4 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleBackToLanding}
+                    className="flex items-center gap-2 text-github-muted hover:text-github-text transition-colors"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                    <span className="hidden sm:inline">Back to Home</span>
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <Github className="w-6 h-6 text-github-accent" />
+                    <Sun className="w-6 h-6 text-solar-corona" />
+                    <span className="font-semibold text-github-text">Cosmic Code</span>
+                  </div>
+                </div>
+                
+                <div className="hidden md:flex items-center gap-4">
+                  <button
+                    onClick={() => handleViewChange('realtime')}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      currentView === 'realtime' 
+                        ? 'bg-github-accent text-white' 
+                        : 'text-github-muted hover:text-github-text hover:bg-github-surface'
+                    }`}
+                  >
+                    Real-time
+                  </button>
+                  <button
+                    onClick={() => handleViewChange('dashboard')}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      currentView === 'dashboard' 
+                        ? 'bg-github-accent text-white' 
+                        : 'text-github-muted hover:text-github-text hover:bg-github-surface'
+                    }`}
+                  >
+                    Analytics
+                  </button>
+                </div>
+              </div>
             </div>
-            <div className="glass-solar px-4 py-2 rounded-full text-sm text-solar-flare flex items-center gap-2">
-              <Sun className="w-4 h-4" />
-              Solar Activity
-            </div>
-            <div className="glass-cosmic px-4 py-2 rounded-full text-sm text-cosmic-nebula flex items-center gap-2">
-              <Star className="w-4 h-4" />
-              Correlation Analysis
-            </div>
-          </div>
-        </div>
-      </header>
+          </nav>
+        </>
+      )}
       
-      {/* Main Dashboard */}
-      <main className="relative z-10 px-4 pb-12" id="dashboard">
-        <Dashboard githubData={githubData} solarData={solarData} />
+      {/* Main Content */}
+      <main className="relative z-10 px-4 py-8">
+        {currentView === 'realtime' && <RealtimeDashboard />}
+        {currentView === 'dashboard' && (
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-github-text mb-2">
+                Historical Analysis Dashboard
+              </h1>
+              <p className="text-github-muted">
+                30-day correlation analysis between solar activity and GitHub contributions
+              </p>
+            </div>
+            <Dashboard githubData={githubData} solarData={solarData} />
+          </div>
+        )}
       </main>
 
       {/* Footer */}
-      <footer className="relative z-10 text-center py-8 px-4 border-t border-github-border/30">
-        <p className="text-github-muted text-sm">
-          Made with ❤️ for developers who believe in cosmic connections
-        </p>
-      </footer>
+      {showNavigation && (
+        <footer className="relative z-10 text-center py-8 px-4 border-t border-github-border/30">
+          <p className="text-github-muted text-sm">
+            Made with ❤️ for developers who believe in cosmic connections
+          </p>
+        </footer>
+      )}
     </div>
   );
 }

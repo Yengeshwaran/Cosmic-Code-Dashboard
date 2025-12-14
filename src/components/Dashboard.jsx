@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { TrendingUp, GitCommit, Sun, Activity, Zap, Star, GitBranch, AlertCircle } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, PieChart, Pie, Cell } from 'recharts';
+import { TrendingUp, GitCommit, Sun, Activity, Zap, Star, GitBranch, AlertCircle, Calendar, Clock } from 'lucide-react';
 import StatCard from './StatCard';
 import CorrelationChart from './CorrelationChart';
 
@@ -225,6 +225,83 @@ const Dashboard = ({ githubData, solarData }) => {
         <CorrelationChart data={mergedData} />
       </section>
 
+      {/* Additional Creative Charts */}
+      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Activity Patterns Radar Chart */}
+        <div className="glass-cosmic rounded-2xl p-6 lg:p-8 hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-cosmic-nebula/20 rounded-lg">
+              <Activity className="w-6 h-6 text-cosmic-nebula" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-github-text">Activity Patterns</h3>
+              <p className="text-github-muted text-sm">Multi-dimensional analysis</p>
+            </div>
+          </div>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <RadarChart data={getRadarData(mergedData)}>
+                <PolarGrid stroke="rgba(139, 92, 246, 0.2)" />
+                <PolarAngleAxis tick={{ fontSize: 11, fill: 'rgba(240, 246, 252, 0.7)' }} />
+                <PolarRadiusAxis tick={{ fontSize: 10, fill: 'rgba(240, 246, 252, 0.5)' }} />
+                <Radar
+                  name="GitHub Activity"
+                  dataKey="github"
+                  stroke="#3fb950"
+                  fill="#3fb950"
+                  fillOpacity={0.2}
+                  strokeWidth={2}
+                />
+                <Radar
+                  name="Solar Activity"
+                  dataKey="solar"
+                  stroke="#ffd23f"
+                  fill="#ffd23f"
+                  fillOpacity={0.2}
+                  strokeWidth={2}
+                />
+                <Legend />
+              </RadarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Weekly Distribution Pie Chart */}
+        <div className="glass-github rounded-2xl p-6 lg:p-8 hover-lift">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-github-accent/20 rounded-lg">
+              <Calendar className="w-6 h-6 text-github-accent" />
+            </div>
+            <div>
+              <h3 className="text-xl font-semibold text-github-text">Weekly Distribution</h3>
+              <p className="text-github-muted text-sm">Commit patterns by day</p>
+            </div>
+          </div>
+          
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={getWeeklyData(githubData)}
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="commits"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                >
+                  {getWeeklyData(githubData).map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={getWeeklyColors()[index]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </section>
+
       {/* Insights Panel */}
       <section className="glass-cosmic rounded-2xl p-6 lg:p-8">
         <div className="flex items-center gap-3 mb-6">
@@ -291,5 +368,78 @@ const calculateOverallCorrelation = (data) => {
   
   return denominator === 0 ? 0 : numerator / denominator;
 };
+
+// Radar chart data preparation
+const getRadarData = (data) => {
+  const metrics = ['Commits', 'Pull Requests', 'Issues', 'Solar Flux', 'Geomagnetic', 'Correlation'];
+  
+  return metrics.map(metric => {
+    let githubValue = 0;
+    let solarValue = 0;
+    
+    switch (metric) {
+      case 'Commits':
+        githubValue = Math.min(100, (data.reduce((sum, d) => sum + d.commits, 0) / data.length) * 2);
+        solarValue = 0;
+        break;
+      case 'Pull Requests':
+        githubValue = Math.min(100, (data.reduce((sum, d) => sum + (d.pullRequests || 0), 0) / data.length) * 5);
+        solarValue = 0;
+        break;
+      case 'Issues':
+        githubValue = Math.min(100, (data.reduce((sum, d) => sum + (d.issues || 0), 0) / data.length) * 8);
+        solarValue = 0;
+        break;
+      case 'Solar Flux':
+        githubValue = 0;
+        solarValue = Math.min(100, (data.reduce((sum, d) => sum + (d.solarFluxIndex || 0), 0) / data.length));
+        break;
+      case 'Geomagnetic':
+        githubValue = 0;
+        solarValue = Math.min(100, (data.reduce((sum, d) => sum + (d.geomagneticActivity || 0), 0) / data.length) * 10);
+        break;
+      case 'Correlation':
+        const correlation = Math.abs(calculateOverallCorrelation(data));
+        githubValue = correlation * 100;
+        solarValue = correlation * 100;
+        break;
+      default:
+        break;
+    }
+    
+    return {
+      metric,
+      github: Math.round(githubValue),
+      solar: Math.round(solarValue)
+    };
+  });
+};
+
+// Weekly distribution data
+const getWeeklyData = (data) => {
+  const weeklyCommits = { Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0 };
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  
+  data.forEach(day => {
+    const dayOfWeek = dayNames[new Date(day.date).getDay()];
+    weeklyCommits[dayOfWeek] += day.commits;
+  });
+  
+  return Object.entries(weeklyCommits).map(([name, commits]) => ({
+    name,
+    commits
+  }));
+};
+
+// Colors for weekly chart
+const getWeeklyColors = () => [
+  '#3fb950', // Monday - Green
+  '#58a6ff', // Tuesday - Blue
+  '#ffd23f', // Wednesday - Yellow
+  '#ff6b35', // Thursday - Orange
+  '#8b5cf6', // Friday - Purple
+  '#f97316', // Saturday - Orange
+  '#ef4444'  // Sunday - Red
+];
 
 export default Dashboard;

@@ -27,17 +27,23 @@ const MobileMenu = ({ isOpen, onToggle }) => {
               </div>
               
               <nav className="space-y-3">
-                <a href="#stats" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                <button 
+                  onClick={() => window.location.hash = 'realtime'}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors w-full text-left"
+                >
                   <Activity className="w-5 h-5 text-github-accent" />
-                  <span className="text-github-text">Statistics</span>
-                </a>
-                <a href="#github" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <span className="text-github-text">Real-time Data</span>
+                </button>
+                <button 
+                  onClick={() => window.location.hash = 'dashboard'}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors w-full text-left"
+                >
                   <Github className="w-5 h-5 text-github-success" />
-                  <span className="text-github-text">GitHub Activity</span>
-                </a>
-                <a href="#solar" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
+                  <span className="text-github-text">Analytics Dashboard</span>
+                </button>
+                <a href="#stats" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
                   <Sun className="w-5 h-5 text-solar-corona" />
-                  <span className="text-github-text">Solar Data</span>
+                  <span className="text-github-text">Statistics</span>
                 </a>
                 <a href="#correlation" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/5 transition-colors">
                   <Info className="w-5 h-5 text-cosmic-nebula" />
